@@ -7,7 +7,7 @@ import Input from '../components/Input.jsx';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/Card.jsx';
 import { Alert, AlertTitle, AlertDescription } from '../components/Alert.jsx';
 import Spinner from '../components/Spinner.jsx';
-import bankyHeroImage from '../assets/banky-image.png';
+import bankyHeroImage from '../assets/bankyyy.png';
 
 // Statuses from your original code
 const STATUS_IDLE = 'idle';
