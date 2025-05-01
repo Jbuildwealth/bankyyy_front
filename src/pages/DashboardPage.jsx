@@ -1,0 +1,184 @@
+// src/pages/DashboardPage.jsx
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import api from '../services/api.js';
+import Button from '../components/Button.jsx';
+import { Alert, AlertTitle, AlertDescription } from '../components/Alert.jsx';
+import Spinner from '../components/Spinner.jsx';
+// Import all dashboard components
+import CreateAccountForm from '../components/dashboard/CreateAccountForm.jsx';
+import TransactionForm from '../components/dashboard/TransactionForm.jsx';
+import UnifiedTransferForm from '../components/dashboard/UnifiedTransferForm.jsx';
+import AccountList from '../components/dashboard/AccountList.jsx';
+import TransactionHistory from '../components/dashboard/TransactionHistory.jsx';
+
+const DashboardPage = ({ onNavigateToProfile }) => {
+    // --- State Variables ---
+    const { user, logout, isLoggingOut, logoutMsg } = useAuth();
+    const [accounts, setAccounts] = useState([]);
+    const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
+    const [accountError, setAccountError] = useState(null);
+    const [transactions, setTransactions] = useState([]);
+    const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+    const [transactionError, setTransactionError] = useState(null);
+    // State for action form visibility
+    const [actionHeaderClicks, setActionHeaderClicks] = useState(0);
+    const [showDepositWithdrawalForms, setShowDepositWithdrawalForms] = useState(false);
+    // State for Transaction History Filter
+    const [historyFilterAccountId, setHistoryFilterAccountId] = useState(null);
+    // Optional: State for success/error messages shown at the top level
+    const [globalMessage, setGlobalMessage] = useState({ type: '', text: '' });
+
+
+    // --- Data Fetching Callbacks ---
+    const fetchTransactions = useCallback(async () => {
+        // Keep existing fetch logic, ensure errors are handled/set
+        const logPrefix = ">>> fetchTransactions:"; /* ... */ setIsLoadingTransactions(true); setTransactionError(null);
+        try { const responseData = await api.getTransactions(); if (Array.isArray(responseData)) { setTransactions(responseData); } else { /* handle error */ setTransactions([]); throw new Error("Invalid response format."); } } catch (error) { console.error(`${logPrefix} Error:`, error); setTransactionError(error.message || "Could not load history."); setTransactions([]); } finally { setIsLoadingTransactions(false); }
+    }, []);
+
+    const fetchAccounts = useCallback(async () => {
+        // Keep existing fetch logic, ensure errors are handled/set
+         const logPrefix = ">>> fetchAccounts:"; /* ... */ setIsLoadingAccounts(true); setAccountError(null);
+         try { const response = await api.getAccounts(); if (response && response.success && Array.isArray(response.data)) { setAccounts(response.data); } else { /* handle error */ setAccounts([]); throw new Error(response?.message || "Failed to fetch accounts."); } } catch (error) { console.error(`${logPrefix} Error:`, error); setAccountError(error.message || "Could not load accounts."); setAccounts([]); } finally { setIsLoadingAccounts(false); }
+    }, []);
+
+    // --- Effects ---
+    useEffect(() => {
+        console.log("DashboardPage initial useEffect running...");
+        fetchAccounts();
+        fetchTransactions();
+    }, [fetchAccounts, fetchTransactions]); // Dependencies
+
+
+    // --- Handlers ---
+
+    // Generic handler for actions causing data refresh
+     const handleActionSuccess = useCallback((message = 'Action successful!') => {
+        console.log("Action successful, refreshing accounts/transactions...");
+        setGlobalMessage({ type: 'success', text: message });
+        fetchAccounts();
+        fetchTransactions();
+        // Clear message after a delay
+        setTimeout(() => setGlobalMessage({ type: '', text: '' }), 4000);
+     }, [fetchAccounts, fetchTransactions]); // Dependencies
+
+     // Specific handler for account rename success
+     const handleAccountRenamed = useCallback(() => {
+         console.log("Account rename successful, calling refresh...");
+         handleActionSuccess('Account renamed successfully!'); // Use generic handler with specific message
+     }, [handleActionSuccess]); // Dependency
+
+     // Handler for account deletion success
+      const handleAccountDeleted = useCallback(() => {
+         console.log("Account delete successful, calling refresh...");
+         handleActionSuccess('Account deleted successfully!'); // Use generic handler
+         setHistoryFilterAccountId(null); // Clear filter if the filtered account was deleted
+     }, [handleActionSuccess]);
+
+    // Action Header Click Handler (for showing D/W forms)
+    const handleActionHeaderClick = () => {
+        const newClickCount = actionHeaderClicks + 1;
+        setActionHeaderClicks(newClickCount);
+        if (newClickCount >= 2) { setShowDepositWithdrawalForms(true); }
+    };
+
+    // Transaction History Filter Handlers
+    const handleViewTransactions = useCallback((accountId) => {
+        setHistoryFilterAccountId(accountId);
+        // Optional: scrollIntoView
+    }, []);
+
+    const handleShowAllTransactions = useCallback(() => {
+        setHistoryFilterAccountId(null);
+    }, []);
+
+
+    // --- Render Logic ---
+    console.log('Rendering DashboardPage with State:', { isLoadingAccounts, isLoadingTransactions, accountError, transactionError, accountsCount: accounts.length, transactionsCount: transactions.length, showDepositWithdrawalForms, historyFilterAccountId });
+
+    return (
+        <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
+            {/* Header Section */}
+            <header className="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-4">
+                     <h1 className="text-xl md:text-2xl font-semibold text-gray-800">Welcome, {user?.name || 'User'}!</h1>
+                     <Button onClick={onNavigateToProfile} variant="secondary" size="sm" disabled={isLoggingOut}> View Profile </Button>
+                </div>
+                <Button onClick={logout} variant="outline" size="sm" disabled={isLoggingOut} className="min-w-[80px]">
+                     {isLoggingOut ? (<><Spinner size="sm" className="mr-2" /> {logoutMsg || 'Processing...'}</>) : ('Logout')}
+                </Button>
+            </header>
+
+             {/* Global Success/Error Alert */}
+             {globalMessage.text && (
+                 <div className="mb-4">
+                     <Alert variant={globalMessage.type === 'success' ? 'default' : 'destructive'}>
+                         <AlertDescription>{globalMessage.text}</AlertDescription>
+                     </Alert>
+                 </div>
+            )}
+
+
+            {/* Main Content Grid */}
+            <main className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left Column */}
+                <section className="lg:col-span-2 space-y-6">
+                    <div>
+                        <h2 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+                            <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg> Your Accounts
+                        </h2>
+                        {/* Pass all necessary handlers to AccountList */}
+                        <AccountList
+                            accounts={accounts}
+                            isLoading={isLoadingAccounts}
+                            error={accountError}
+                            onViewTransactions={handleViewTransactions}
+                            onAccountDeleted={handleAccountDeleted} // Use specific delete handler
+                            onAccountRenamed={handleAccountRenamed} // Pass the rename handler
+                        />
+                    </div>
+                    <div id="transaction-history-section">
+                        <h2 className="text-lg font-semibold mb-4 text-gray-700 flex items-center">
+                             <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg> Transaction History
+                        </h2>
+                        <TransactionHistory
+                            transactions={transactions}
+                            isLoading={isLoadingTransactions}
+                            error={transactionError}
+                            accounts={accounts}
+                            filterAccountId={historyFilterAccountId}
+                            onShowAll={handleShowAllTransactions}
+                        />
+                    </div>
+                </section>
+
+                {/* Right Column (Actions Sidebar) */}
+                <aside className="lg:col-span-1 space-y-6">
+                    <button type="button" onClick={handleActionHeaderClick} className="flex items-center text-lg font-semibold text-gray-700 mb-4 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 rounded px-1 py-0.5 w-full text-left">
+                        <svg className="w-5 h-5 mr-2 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> Actions
+                        {!showDepositWithdrawalForms}
+                    </button>
+
+                    {isLoadingAccounts ? (<div className="flex justify-center items-center p-4 text-gray-500"><Spinner className="mr-2" /> Loading actions...</div>)
+                        : accountError ? (<Alert variant="destructive"><AlertTitle>Cannot Load Actions</AlertTitle><AlertDescription>{accountError}</AlertDescription></Alert>)
+                            : accounts.length === 0 ? (<Alert><AlertTitle>No Accounts</AlertTitle><AlertDescription>Create an account first.</AlertDescription></Alert>)
+                                : (
+                                    <div className="space-y-6">
+                                        {showDepositWithdrawalForms && (
+                                            <>
+                                                <TransactionForm title="Deposit" accounts={accounts} transactionType="deposit" onTransactionSuccess={() => handleActionSuccess('Deposit successful!')} />
+                                                <TransactionForm title="Withdrawal" accounts={accounts} transactionType="withdrawal" onTransactionSuccess={() => handleActionSuccess('Withdrawal successful!')} />
+                                            </>
+                                        )}
+                                        <UnifiedTransferForm accounts={accounts} onTransferSuccess={() => handleActionSuccess('Transfer successful!')} />
+                                    </div>
+                                )}
+                    <CreateAccountForm onAccountCreated={() => handleActionSuccess('Account created successfully!')} />
+                </aside>
+            </main>
+        </div>
+    );
+};
+
+export default DashboardPage;
