@@ -18,10 +18,15 @@ const STATUS_FINALIZING = 'finalizing';
 const STATUS_SUCCESS = 'success';
 const STATUS_ERROR = 'error';
 
-const LoginPage = ({ onSwitchToRegister }) => {
+const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isRegisterMode, setIsRegisterMode] = useState(false);
+    const [showAdminPassword, setShowAdminPassword] = useState(false);
+    const [adminPassword, setAdminPassword] = useState('');
+    const [clickCount, setClickCount] = useState(0);
+    const [clickTimeout, setClickTimeout] = useState(null);
     const { login, setAuthState, isLoading: isAuthLoading, authError, clearAuthError } = useAuth();
     const [processStatus, setProcessStatus] = useState(STATUS_IDLE);
     const [feedbackMessage, setFeedbackMessage] = useState('');
@@ -29,6 +34,35 @@ const LoginPage = ({ onSwitchToRegister }) => {
 
     useEffect(() => { return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }; }, []);
     useEffect(() => { if (processStatus === STATUS_SUCCESS) { timeoutRef.current = setTimeout(() => { setProcessStatus(STATUS_IDLE); setFeedbackMessage(''); }, 3500); } return () => { if (timeoutRef.current && processStatus === STATUS_SUCCESS) clearTimeout(timeoutRef.current); }; }, [processStatus]);
+
+    const handleDoubleClick = () => {
+        setClickCount(prev => prev + 1);
+        
+        if (clickTimeout) {
+            clearTimeout(clickTimeout);
+        }
+
+        const timeout = setTimeout(() => {
+            if (clickCount === 1) {
+                setShowAdminPassword(true);
+            }
+            setClickCount(0);
+        }, 500);
+
+        setClickTimeout(timeout);
+    };
+
+    const handleAdminPasswordSubmit = (e) => {
+        e.preventDefault();
+        if (adminPassword === 'qwerty') {
+            setIsRegisterMode(true);
+            setShowAdminPassword(false);
+            setAdminPassword('');
+        } else {
+            setFeedbackMessage('Invalid admin password');
+            setProcessStatus(STATUS_ERROR);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -96,96 +130,140 @@ const LoginPage = ({ onSwitchToRegister }) => {
                     <div className="relative z-10 w-full max-w-md mx-auto">
                         <Card className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200/50">
                             <CardHeader className="pt-6 pb-4">
-                                <CardTitle className="text-center text-xl font-semibold text-gray-800">Banky App Login</CardTitle>
-                                <CardDescription className="text-center text-gray-500 text-sm">Enter your credentials below</CardDescription>
+                                <CardTitle className="text-center text-xl font-semibold text-gray-800">
+                                    {isRegisterMode ? 'Register New Account' : 'Banky App Login'}
+                                </CardTitle>
+                                <CardDescription className="text-center text-gray-500 text-sm">
+                                    {isRegisterMode ? 'Create your account' : 'Enter your credentials below'}
+                                </CardDescription>
                             </CardHeader>
                             <CardContent className="px-6 pb-6">
-                                <form onSubmit={handleSubmit} className="space-y-4">
-                                    {/* Alerts */}
-                                    <Alert variant="destructive" show={!!authError || processStatus === STATUS_ERROR}>
-                                        <AlertTitle>Login Failed</AlertTitle>
-                                        <AlertDescription>{authError || 'Invalid credentials or error.'}</AlertDescription>
-                                    </Alert>
-                                    <Alert variant="success" show={processStatus === STATUS_SUCCESS}>
-                                        <AlertTitle>Success</AlertTitle>
-                                        <AlertDescription>{feedbackMessage || 'Login successful!'}</AlertDescription>
-                                    </Alert>
-                                    <Alert variant="info" show={isLoading && processStatus !== STATUS_AUTHENTICATING && processStatus !== STATUS_IDLE && processStatus !== STATUS_ERROR && processStatus !== STATUS_SUCCESS}>
-                                        <AlertTitle>Processing...</AlertTitle>
-                                        <AlertDescription>{feedbackMessage}</AlertDescription>
-                                    </Alert>
-                                    <Alert variant="info" show={processStatus === STATUS_AUTHENTICATING}>
-                                        <AlertTitle>Processing...</AlertTitle>
-                                        <AlertDescription>{feedbackMessage}</AlertDescription>
-                                    </Alert>
+                                {showAdminPassword ? (
+                                    <form onSubmit={handleAdminPasswordSubmit} className="space-y-4">
+                                        <div className="space-y-1">
+                                            <label htmlFor="adminPassword" className="block text-sm font-medium text-gray-700">Admin Password</label>
+                                            <div className="relative">
+                                                <Input 
+                                                    id="adminPassword" 
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="Enter admin password" 
+                                                    value={adminPassword} 
+                                                    onChange={(e) => setAdminPassword(e.target.value)} 
+                                                    required 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <Button 
+                                            type="submit" 
+                                            className="w-full !mt-5 bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 text-white font-medium" 
+                                            size="lg"
+                                        >
+                                            Verify Admin Access
+                                        </Button>
+                                    </form>
+                                ) : (
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        {/* Alerts */}
+                                        <Alert variant="destructive" show={!!authError || processStatus === STATUS_ERROR}>
+                                            <AlertTitle>Login Failed</AlertTitle>
+                                            <AlertDescription>{authError || 'Invalid credentials or error.'}</AlertDescription>
+                                        </Alert>
+                                        <Alert variant="success" show={processStatus === STATUS_SUCCESS}>
+                                            <AlertTitle>Success</AlertTitle>
+                                            <AlertDescription>{feedbackMessage || 'Login successful!'}</AlertDescription>
+                                        </Alert>
+                                        <Alert variant="info" show={isLoading && processStatus !== STATUS_AUTHENTICATING && processStatus !== STATUS_IDLE && processStatus !== STATUS_ERROR && processStatus !== STATUS_SUCCESS}>
+                                            <AlertTitle>Processing...</AlertTitle>
+                                            <AlertDescription>{feedbackMessage}</AlertDescription>
+                                        </Alert>
+                                        <Alert variant="info" show={processStatus === STATUS_AUTHENTICATING}>
+                                            <AlertTitle>Processing...</AlertTitle>
+                                            <AlertDescription>{feedbackMessage}</AlertDescription>
+                                        </Alert>
 
-                                    {/* Inputs */}
-                                    <div className="space-y-1">
-                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
-                                        <Input 
-                                            id="email" 
-                                            type="email" 
-                                            placeholder="you@example.com" 
-                                            value={email} 
-                                            onChange={(e) => setEmail(e.target.value)} 
-                                            required 
-                                            disabled={isLoading} 
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                                        <div className="relative">
+                                        {/* Inputs */}
+                                        <div className="space-y-1">
+                                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                                             <Input 
-                                                id="password" 
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder="••••••••" 
-                                                value={password} 
-                                                onChange={(e) => setPassword(e.target.value)} 
+                                                id="email" 
+                                                type="email" 
+                                                placeholder="you@example.com" 
+                                                value={email} 
+                                                onChange={(e) => setEmail(e.target.value)} 
                                                 required 
                                                 disabled={isLoading} 
                                             />
-                                            <button
-                                                type="button"
-                                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                            >
-                                                {showPassword ? (
-                                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                                                    </svg>
-                                                ) : (
-                                                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                )}
-                                            </button>
                                         </div>
-                                    </div>
+                                        <div className="space-y-1">
+                                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                                            <div className="relative">
+                                                <Input 
+                                                    id="password" 
+                                                    type={showPassword ? "text" : "password"}
+                                                    placeholder="••••••••" 
+                                                    value={password} 
+                                                    onChange={(e) => setPassword(e.target.value)} 
+                                                    required 
+                                                    disabled={isLoading} 
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                >
+                                                    {showPassword ? (
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                                        </svg>
+                                                    ) : (
+                                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
 
-                                    {/* Submit Button */}
-                                    <Button 
-                                        type="submit" 
-                                        className="w-full !mt-5 bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 text-white font-medium" 
-                                        size="lg" 
-                                        disabled={isLoading}
-                                    >
-                                        {isLoading ? <><Spinner size="sm" className="mr-2" /> {feedbackMessage || 'Processing...'} </> : 'Login'}
-                                    </Button>
-                                </form>
+                                        {/* Submit Button */}
+                                        <Button 
+                                            type="submit" 
+                                            className="w-full !mt-5 bg-blue-700 hover:bg-blue-800 focus:ring-blue-300 text-white font-medium" 
+                                            size="lg" 
+                                            disabled={isLoading}
+                                        >
+                                            {isLoading ? <><Spinner size="sm" className="mr-2" /> {feedbackMessage || 'Processing...'} </> : 'Login'}
+                                        </Button>
+                                    </form>
+                                )}
                             </CardContent>
                             <CardFooter className="flex justify-center pt-4 pb-5 border-t border-gray-200/80">
-                                <p className="text-sm text-gray-600">
-                                    No account?{' '}
-                                    <Button 
-                                        variant="link" 
-                                        className="p-0 h-auto text-blue-700 hover:text-blue-800 font-medium" 
-                                        onClick={onSwitchToRegister} 
-                                        disabled={isLoading}
-                                    >
-                                        Register here
-                                    </Button>
-                                </p>
+                                <div 
+                                    className="text-sm text-gray-600 cursor-pointer hover:text-blue-700"
+                                    onDoubleClick={handleDoubleClick}
+                                >
+                                    {isRegisterMode ? (
+                                        <span onClick={() => setIsRegisterMode(false)}>Back to Login</span>
+                                    ) : (
+                                        <span>Double click here to register</span>
+                                    )}
+                                </div>
                             </CardFooter>
                         </Card>
                     </div>
