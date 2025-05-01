@@ -19,16 +19,26 @@ export default defineConfig({
     },
   },
   // Optional: Add build target if you haven't already
-  // build: {
-  //   target: 'es2020'
-  // },
-  // Optional: Add server proxy if needed for API calls in development
-  // server: {
-  //   proxy: {
-  //     '/api': {
-  //       target: 'http://localhost:5000', // Your backend URL
-  //       changeOrigin: true,
-  //     }
-  //   }
-  // }
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+        secure: false,
+        ws: true
+      }
+    }
+  }
 })

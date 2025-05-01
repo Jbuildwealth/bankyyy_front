@@ -1,7 +1,10 @@
 // src/services/api.js
 
 // Configuration
-const API_BASE_URL = 'http://localhost:5000/api'; // Ensure this is correct
+const isDevelopment = import.meta.env.DEV;
+const API_BASE_URL = isDevelopment 
+    ? '/api'  // Use proxy in development
+    : 'https://bankyyy.onrender.com/api';  // Use full URL in production
 
 // API Service Object
 const api = {
