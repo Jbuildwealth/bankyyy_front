@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Alert, AlertTitle, AlertDescription } from '../components/Alert.jsx';
 import Spinner from '../components/Spinner.jsx';
 import bankyHeroImage from '../assets/bankyyy.png';
+import api from '../services/api.js';
 
 // Statuses from your original code
 const STATUS_IDLE = 'idle';
@@ -54,14 +55,26 @@ const LoginPage = () => {
         setClickTimeout(timeout);
     };
 
-    const handleAdminPasswordSubmit = (e) => {
+    const handleAdminPasswordSubmit = async (e) => {
         e.preventDefault();
-        if (adminPassword === 'qwerty') {
-            setIsRegisterMode(true);
-            setShowAdminPassword(false);
-            setAdminPassword('');
-        } else {
-            setFeedbackMessage('Invalid admin password');
+        setProcessStatus(STATUS_AUTHENTICATING);
+        setFeedbackMessage('Verifying admin access...');
+
+        try {
+            const response = await api.verifyAdminPassword(adminPassword);
+            if (response.success) {
+                setIsRegisterMode(true);
+                setShowAdminPassword(false);
+                setAdminPassword('');
+                setProcessStatus(STATUS_IDLE);
+                setFeedbackMessage('');
+            } else {
+                setFeedbackMessage('Invalid admin password');
+                setProcessStatus(STATUS_ERROR);
+            }
+        } catch (error) {
+            console.error('Admin verification error:', error);
+            setFeedbackMessage(error.message || 'Failed to verify admin access');
             setProcessStatus(STATUS_ERROR);
         }
     };

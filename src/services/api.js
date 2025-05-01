@@ -127,6 +127,14 @@ const api = {
         return this.request('/health', { method: 'GET' });
     },
 
+    // Verify admin password
+    async verifyAdminPassword(password) {
+        return this.request('/auth/verify-admin', {
+            method: 'POST',
+            body: JSON.stringify({ password })
+        });
+    },
+
     register(userData) { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }); },
 
     // --- User Profile ---
