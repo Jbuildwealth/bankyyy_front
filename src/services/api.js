@@ -26,6 +26,8 @@ const api = {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
+        console.log('>>> Request Headers:', headers);
+
         try {
             const response = await fetch(url, { 
                 ...options, 
@@ -33,6 +35,9 @@ const api = {
                 credentials: 'include',
                 mode: 'cors'
             });
+
+            console.log('>>> Response Status:', response.status);
+            console.log('>>> Response Headers:', Object.fromEntries(response.headers.entries()));
 
             if (response.status === 204) {
                 console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: 204 No Content)`);
@@ -54,20 +59,17 @@ const api = {
             } else {
                 const responseText = await response.text();
                 console.log('<<< Response Text:', responseText);
-                // If response is OK but not JSON, create a message object
-                // If response is not OK and not JSON, the error thrown below will use the text
-                 if(response.ok) {
-                     data = { message: responseText || `Received status ${response.status} with non-JSON body.` };
-                 } else {
-                     // Store text for error message if !response.ok
-                     data = { _rawText: responseText };
-                 }
+                if(response.ok) {
+                    data = { message: responseText || `Received status ${response.status} with non-JSON body.` };
+                } else {
+                    data = { _rawText: responseText };
+                }
             }
 
             if (!response.ok) {
-                const errorMessage = data?.message // Use message if parsed JSON had one
-                                    || data?._rawText // Use raw text if non-JSON error
-                                    || `HTTP error! status: ${response.status}`; // Fallback
+                const errorMessage = data?.message 
+                    || data?._rawText 
+                    || `HTTP error! status: ${response.status}`;
                 console.error('<<< Error Response:', {
                     status: response.status,
                     statusText: response.statusText,
@@ -76,20 +78,18 @@ const api = {
                 });
                 const error = new Error(errorMessage);
                 error.status = response.status;
-                error.data = data; // Attach response data/text
+                error.data = data;
                 throw error;
             }
             console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: ${response.status})`);
             return data;
 
         } catch (error) {
-            // Log only if it's not an error we already created/logged
             if (!error.status) {
                  console.error(`<<< API Request Network/Processing FAIL: ${options.method || 'GET'} ${url}. Error:`, error);
             }
-            // Standardize or re-throw
             if (error.status) { throw error; }
-            if (error instanceof TypeError) { // Often network errors
+            if (error instanceof TypeError) {
                  const networkError = new Error('Network error: Could not connect to the server.');
                  networkError.isNetworkError = true;
                  throw networkError;
@@ -100,18 +100,33 @@ const api = {
     },
 
     // --- Authentication ---
-    login(credentials) { 
+    async login(credentials) { 
         // Ensure credentials are properly formatted
         const formattedCredentials = {
-            email: credentials.email.trim().toLowerCase(), // Convert to lowercase
+            email: credentials.email.trim().toLowerCase(),
             password: credentials.password
         };
         console.log('Login credentials:', formattedCredentials);
+        
+        // First, test the API connection
+        try {
+            console.log('Testing API connection...');
+            await this.testConnection();
+        } catch (error) {
+            console.error('API connection test failed:', error);
+        }
+
         return this.request('/auth/login', { 
             method: 'POST', 
             body: JSON.stringify(formattedCredentials)
         }); 
     },
+
+    // Test API connection
+    async testConnection() {
+        return this.request('/health', { method: 'GET' });
+    },
+
     register(userData) { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }); },
 
     // --- User Profile ---
