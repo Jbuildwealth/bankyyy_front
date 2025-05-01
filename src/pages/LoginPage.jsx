@@ -31,11 +31,13 @@ const LoginPage = () => {
     const [processStatus, setProcessStatus] = useState(STATUS_IDLE);
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const timeoutRef = useRef(null);
+    const registerAreaRef = useRef(null);
 
     useEffect(() => { return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); }; }, []);
     useEffect(() => { if (processStatus === STATUS_SUCCESS) { timeoutRef.current = setTimeout(() => { setProcessStatus(STATUS_IDLE); setFeedbackMessage(''); }, 3500); } return () => { if (timeoutRef.current && processStatus === STATUS_SUCCESS) clearTimeout(timeoutRef.current); }; }, [processStatus]);
 
-    const handleDoubleClick = () => {
+    const handleDoubleClick = (e) => {
+        e.preventDefault();
         setClickCount(prev => prev + 1);
         
         if (clickTimeout) {
@@ -45,9 +47,9 @@ const LoginPage = () => {
         const timeout = setTimeout(() => {
             if (clickCount === 1) {
                 setShowAdminPassword(true);
+                setClickCount(0);
             }
-            setClickCount(0);
-        }, 500);
+        }, 300);
 
         setClickTimeout(timeout);
     };
@@ -255,15 +257,11 @@ const LoginPage = () => {
                             </CardContent>
                             <CardFooter className="flex justify-center pt-4 pb-5 border-t border-gray-200/80">
                                 <div 
-                                    className="text-sm text-gray-600 cursor-pointer hover:text-blue-700"
+                                    ref={registerAreaRef}
+                                    className="h-8 w-full cursor-pointer"
                                     onDoubleClick={handleDoubleClick}
-                                >
-                                    {isRegisterMode ? (
-                                        <span onClick={() => setIsRegisterMode(false)}>Back to Login</span>
-                                    ) : (
-                                        <span>Double click here to register</span>
-                                    )}
-                                </div>
+                                    style={{ position: 'absolute', bottom: '0', left: '0', right: '0' }}
+                                />
                             </CardFooter>
                         </Card>
                     </div>
