@@ -14,6 +14,9 @@ const api = {
         const token = localStorage.getItem('authToken');
 
         console.log(`>>> API Request: ${options.method || 'GET'} ${url}`); // Keep basic log
+        if (options.body) {
+            console.log('>>> Request Body:', options.body);
+        }
 
         const headers = {
             'Content-Type': 'application/json',
@@ -24,7 +27,12 @@ const api = {
         }
 
         try {
-            const response = await fetch(url, { ...options, headers });
+            const response = await fetch(url, { 
+                ...options, 
+                headers,
+                credentials: 'include',
+                mode: 'cors'
+            });
 
             if (response.status === 204) {
                 console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: 204 No Content)`);
@@ -85,7 +93,18 @@ const api = {
     },
 
     // --- Authentication ---
-    login(credentials) { return this.request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }); },
+    login(credentials) { 
+        // Ensure credentials are properly formatted
+        const formattedCredentials = {
+            email: credentials.email.trim(),
+            password: credentials.password
+        };
+        console.log('Login credentials:', formattedCredentials);
+        return this.request('/auth/login', { 
+            method: 'POST', 
+            body: JSON.stringify(formattedCredentials)
+        }); 
+    },
     register(userData) { return this.request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }); },
 
     // --- User Profile ---

@@ -35,8 +35,17 @@ const LoginPage = ({ onSwitchToRegister }) => {
         e.preventDefault();
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         clearAuthError(); setFeedbackMessage(''); setProcessStatus(STATUS_AUTHENTICATING);
-        setFeedbackMessage('Authenticating...'); console.log("handleSubmit: Set status to AUTHENTICATING");
-        const authResult = await login({ email, password });
+        setFeedbackMessage('Authenticating...'); 
+        console.log("handleSubmit: Set status to AUTHENTICATING");
+        
+        // Format credentials
+        const credentials = {
+            email: email.trim(),
+            password: password
+        };
+        console.log("Submitting credentials:", credentials);
+        
+        const authResult = await login(credentials);
         console.log("handleSubmit: login() call returned:", authResult);
         if (authResult && authResult.token && authResult.user) { // Check response structure
             console.log("handleSubmit: Login successful, starting simulation...");
