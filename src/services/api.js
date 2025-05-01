@@ -44,6 +44,7 @@ const api = {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                  try {
                     data = await response.json();
+                    console.log('<<< Response Data:', data);
                  } catch (jsonError) {
                     console.error('API JSON Parse Error:', jsonError, 'Status:', response.status, 'URL:', url);
                     const parseError = new Error('Failed to parse server JSON response.');
@@ -52,6 +53,7 @@ const api = {
                  }
             } else {
                 const responseText = await response.text();
+                console.log('<<< Response Text:', responseText);
                 // If response is OK but not JSON, create a message object
                 // If response is not OK and not JSON, the error thrown below will use the text
                  if(response.ok) {
@@ -66,10 +68,15 @@ const api = {
                 const errorMessage = data?.message // Use message if parsed JSON had one
                                     || data?._rawText // Use raw text if non-JSON error
                                     || `HTTP error! status: ${response.status}`; // Fallback
+                console.error('<<< Error Response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: Object.fromEntries(response.headers.entries()),
+                    data: data
+                });
                 const error = new Error(errorMessage);
                 error.status = response.status;
                 error.data = data; // Attach response data/text
-                console.error(`API Error Response: ${options.method || 'GET'} ${url} (Status: ${error.status})`, error.message);
                 throw error;
             }
             console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: ${response.status})`);
@@ -96,7 +103,7 @@ const api = {
     login(credentials) { 
         // Ensure credentials are properly formatted
         const formattedCredentials = {
-            email: credentials.email.trim(),
+            email: credentials.email.trim().toLowerCase(), // Convert to lowercase
             password: credentials.password
         };
         console.log('Login credentials:', formattedCredentials);
