@@ -179,11 +179,11 @@ const LoginPage = () => {
             {/* Main */}
             <main className="flex-grow">
                 {/* Hero/Login Section */}
-                <section className="relative flex items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[500px] md:min-h-[600px]">
+                 <section className="relative flex items-center justify-center py-16 md:py-20 px-4 overflow-hidden min-h-[500px] md:min-h-[600px]">
                     <img src={bankyHeroImage} alt="Background" className="absolute inset-0 w-full h-full object-cover z-0"/>
                     <div className="absolute inset-0 bg-black/20 z-0"></div>
-                    <div className="relative z-10 w-full max-w-md mx-auto">
-                        <Card className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200/50">
+                     <div className="relative z-10 w-full max-w-md mx-auto">
+                         <Card className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200/50">
                             <CardHeader className="pt-6 pb-4">
                                 <CardTitle className="text-center text-xl font-semibold text-gray-800">
                                     {isRegisterMode ? 'Register New Account' : 'Banky App Login'}
@@ -192,7 +192,7 @@ const LoginPage = () => {
                                     {isRegisterMode ? 'Create your account' : 'Enter your credentials below'}
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent className="px-6 pb-6">
+                              <CardContent className="px-6 pb-6">
                                 {showAdminPassword ? (
                                     <form onSubmit={handleAdminPasswordSubmit} className="space-y-4">
                                         <div className="space-y-1">
@@ -333,7 +333,7 @@ const LoginPage = () => {
                                         </div>
                                     </form>
                                 ) : (
-                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                   <form onSubmit={handleSubmit} className="space-y-4">
                                         {/* Alerts */}
                                         <Alert variant="destructive" show={!!authError || processStatus === STATUS_ERROR}>
                                             <AlertTitle>Login Failed</AlertTitle>
@@ -353,8 +353,8 @@ const LoginPage = () => {
                                         </Alert>
 
                                         {/* Inputs */}
-                                        <div className="space-y-1">
-                                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+                                          <div className="space-y-1">
+                                              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
                                             <Input 
                                                 id="email" 
                                                 type="email" 
@@ -364,9 +364,9 @@ const LoginPage = () => {
                                                 required 
                                                 disabled={isLoading} 
                                             />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+                                          </div>
+                                          <div className="space-y-1">
+                                              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
                                             <div className="relative">
                                                 <Input 
                                                     id="password" 
@@ -394,7 +394,7 @@ const LoginPage = () => {
                                                     )}
                                                 </button>
                                             </div>
-                                        </div>
+                                          </div>
 
                                         {/* Submit Button */}
                                         <Button 
@@ -403,11 +403,11 @@ const LoginPage = () => {
                                             size="lg" 
                                             disabled={isLoading}
                                         >
-                                            {isLoading ? <><Spinner size="sm" className="mr-2" /> {feedbackMessage || 'Processing...'} </> : 'Login'}
-                                        </Button>
-                                    </form>
+                                             {isLoading ? <><Spinner size="sm" className="mr-2" /> {feedbackMessage || 'Processing...'} </> : 'Login'}
+                                         </Button>
+                                     </form>
                                 )}
-                            </CardContent>
+                                </CardContent>
                             <CardFooter className="flex justify-center pt-4 pb-5 border-t border-gray-200/80">
                                 <div 
                                     ref={registerAreaRef}
@@ -418,9 +418,9 @@ const LoginPage = () => {
                                     <span className="text-xs">Double click to register</span>
                                 </div>
                             </CardFooter>
-                        </Card>
-                    </div>
-                </section>
+                          </Card>
+                     </div>
+                 </section>
 
                 {/* Services Section */}
                 <section id="services" className="py-16 md:py-20 px-6 bg-white">
