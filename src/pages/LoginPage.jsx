@@ -80,6 +80,45 @@ const LoginPage = () => {
         }
     };
 
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        clearAuthError();
+        setFeedbackMessage('');
+        setProcessStatus(STATUS_AUTHENTICATING);
+        setFeedbackMessage('Registering new account...');
+
+        const userData = {
+            name: name.trim(),
+            email: email.trim(),
+            password: password
+        };
+
+        try {
+            const response = await api.register(userData);
+            if (response.success) {
+                setProcessStatus(STATUS_SUCCESS);
+                setFeedbackMessage('Registration successful! Logging you in...');
+                
+                // After successful registration, attempt to log in
+                const loginResult = await login(userData);
+                if (loginResult && loginResult.token && loginResult.user) {
+                    setAuthState(loginResult.token, loginResult.user);
+                } else {
+                    setProcessStatus(STATUS_ERROR);
+                    setFeedbackMessage('Registration successful but login failed. Please try logging in manually.');
+                }
+            } else {
+                setProcessStatus(STATUS_ERROR);
+                setFeedbackMessage(response.message || 'Registration failed.');
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            setProcessStatus(STATUS_ERROR);
+            setFeedbackMessage(error.message || 'Registration failed.');
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -194,7 +233,7 @@ const LoginPage = () => {
                                         </Button>
                                     </form>
                                 ) : isRegisterMode ? (
-                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                    <form onSubmit={handleRegister} className="space-y-4">
                                         {/* Alerts */}
                                         <Alert variant="destructive" show={!!authError || processStatus === STATUS_ERROR}>
                                             <AlertTitle>Registration Failed</AlertTitle>
