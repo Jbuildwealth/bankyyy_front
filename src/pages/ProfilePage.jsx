@@ -34,6 +34,12 @@ const ProfilePage = ({ onBackToDashboard }) => {
     const [passwordUpdateError, setPasswordUpdateError] = useState(null);
     const [passwordUpdateSuccess, setPasswordUpdateSuccess] = useState(null);
 
+    // State for deleting profile
+    const [isDeletingProfile, setIsDeletingProfile] = useState(false);
+    const [deleteError, setDeleteError] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [confirmDeleteText, setConfirmDeleteText] = useState('');
+
     // Fetch profile data
     const fetchProfile = useCallback(async () => {
         if (!token) {
@@ -172,6 +178,28 @@ const ProfilePage = ({ onBackToDashboard }) => {
          setPasswordUpdateError("Password change not implemented yet."); // Placeholder error
     };
 
+    // Handle profile deletion
+    const handleDeleteProfile = async (e) => {
+        e.preventDefault();
+        if (confirmDeleteText !== 'DELETE') {
+            setDeleteError('Please type DELETE to confirm');
+            return;
+        }
+
+        setIsDeletingProfile(true);
+        setDeleteError(null);
+
+        try {
+            await api.deleteProfile();
+            // Call logout to clear the session
+            logout();
+        } catch (error) {
+            console.error("Delete profile error:", error);
+            setDeleteError(error.message || "Failed to delete profile. Please try again.");
+            setIsDeletingProfile(false);
+        }
+    };
+
     // --- Render Logic ---
     if (isLoadingProfile) { return <div className="container mx-auto p-6 flex justify-center items-center min-h-[300px]"><Spinner /> Loading Profile...</div>; }
     // Show error and back button if profile loading failed
@@ -267,6 +295,78 @@ const ProfilePage = ({ onBackToDashboard }) => {
                             {isUpdatingPassword ? <><Spinner size="sm" className="mr-2"/> Updating...</> : 'Update Password'}
                         </Button>
                     </form>
+                </CardContent>
+            </Card>
+
+            {/* Delete Profile Card */}
+            <Card className="border-red-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center text-red-600">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Delete Profile
+                    </CardTitle>
+                    <CardDescription className="text-red-600">
+                        Warning: This action cannot be undone. All your data will be permanently deleted.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {!showDeleteConfirm ? (
+                        <Button 
+                            variant="destructive" 
+                            onClick={() => setShowDeleteConfirm(true)}
+                            disabled={isDeletingProfile}
+                        >
+                            Delete My Profile
+                        </Button>
+                    ) : (
+                        <form onSubmit={handleDeleteProfile} className="space-y-4">
+                            {deleteError && (
+                                <Alert variant="destructive">
+                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertDescription>{deleteError}</AlertDescription>
+                                </Alert>
+                            )}
+                            <div className="space-y-2">
+                                <p className="text-sm text-gray-600">
+                                    To confirm deletion, please type <span className="font-mono font-bold">DELETE</span> below:
+                                </p>
+                                <Input
+                                    type="text"
+                                    value={confirmDeleteText}
+                                    onChange={(e) => setConfirmDeleteText(e.target.value)}
+                                    placeholder="Type DELETE to confirm"
+                                    disabled={isDeletingProfile}
+                                />
+                            </div>
+                            <div className="flex gap-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setShowDeleteConfirm(false);
+                                        setConfirmDeleteText('');
+                                        setDeleteError(null);
+                                    }}
+                                    disabled={isDeletingProfile}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="destructive"
+                                    disabled={isDeletingProfile || confirmDeleteText !== 'DELETE'}
+                                >
+                                    {isDeletingProfile ? (
+                                        <><Spinner size="sm" className="mr-2"/> Deleting...</>
+                                    ) : (
+                                        'Confirm Deletion'
+                                    )}
+                                </Button>
+                            </div>
+                        </form>
+                    )}
                 </CardContent>
             </Card>
         </div>

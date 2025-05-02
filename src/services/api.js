@@ -140,6 +140,7 @@ const api = {
     // --- User Profile ---
     getUserProfile() { return this.request('/users/profile'); },
     updateUserProfile(profileData) { return this.request('/users/profile', { method: 'PUT', body: JSON.stringify(profileData) }); },
+    deleteProfile() { return this.request('/users/profile', { method: 'DELETE' }); },
     // TODO: Add changePassword API call here later
     // changePassword(passwordData) { return this.request('/auth/change-password', { method: 'PUT', body: JSON.stringify(passwordData) }); },
 
