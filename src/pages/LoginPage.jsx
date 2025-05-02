@@ -271,10 +271,12 @@ const LoginPage = () => {
                             <CardFooter className="flex justify-center pt-4 pb-5 border-t border-gray-200/80">
                                 <div 
                                     ref={registerAreaRef}
-                                    className="h-8 w-full cursor-pointer"
+                                    className="h-8 w-full cursor-pointer flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
                                     onDoubleClick={handleDoubleClick}
-                                    style={{ position: 'absolute', bottom: '0', left: '0', right: '0' }}
-                                />
+                                    style={{ position: 'relative' }}
+                                >
+                                    <span className="text-xs">Double click to register</span>
+                                </div>
                             </CardFooter>
                         </Card>
                     </div>
