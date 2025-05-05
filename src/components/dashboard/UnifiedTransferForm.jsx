@@ -29,6 +29,9 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
     const [formStatus, setFormStatus] = useState(STATUS_IDLE);
     const [feedbackMessage, setFeedbackMessage] = useState('');
     const timeoutRef = useRef(null);
+    const [showOtpFlash, setShowOtpFlash] = useState(false);
+    const [flashedOtp, setFlashedOtp] = useState('');
+    const otpFlashTimeoutRef = useRef(null);
     // --- End State ---
 
     // --- Memoized Values ---
@@ -121,8 +124,15 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
     }, [formStatus, step]); // Add step dependency
-    // --- End Effects ---
 
+    // Cleanup OTP flash timeout
+    useEffect(() => {
+        return () => {
+            if (otpFlashTimeoutRef.current) {
+                clearTimeout(otpFlashTimeoutRef.current);
+            }
+        };
+    }, []);
 
     // --- Event Handlers ---
     const resetFormFields = useCallback(() => {
@@ -142,11 +152,11 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
 
     // --- Initiate Transfer Handler ---
     const handleInitiateTransfer = async (event) => {
-        event.preventDefault(); // *** CRITICAL: Prevent default form submission ***
-        console.log(">>> handleInitiateTransfer: Form submitted"); // DEBUG
+        event.preventDefault();
+        console.log(">>> handleInitiateTransfer: Form submitted");
 
         if (!canSubmitDetails) {
-            console.log(">>> handleInitiateTransfer: Submission blocked, details invalid."); // DEBUG
+            console.log(">>> handleInitiateTransfer: Submission blocked, details invalid.");
             setFeedbackMessage("Please fill all required fields correctly.");
             setFormStatus(STATUS_ERROR);
             return;
@@ -159,27 +169,40 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
             transferType,
             fromAccountId,
             amount,
-            description: description.trim() || undefined, // Send undefined if empty
+            description: description.trim() || undefined,
             ...(transferType === 'internal' && { toAccountId }),
             ...(transferType === 'external' && { recipientAccountNumber: recipientAccountNumber.trim() })
         };
 
-        console.log(">>> handleInitiateTransfer: Calling api.initiateTransfer with:", detailsToSend); // DEBUG
+        console.log(">>> handleInitiateTransfer: Calling api.initiateTransfer with:", detailsToSend);
 
         try {
             const response = await api.initiateTransfer(detailsToSend);
-            console.log(">>> handleInitiateTransfer: API Response:", response); // DEBUG
+            console.log(">>> handleInitiateTransfer: API Response:", response);
 
-            setFeedbackMessage(response.message || 'OTP initiated. Please check your device (or console).'); // Use server message
-            setFormStatus(STATUS_IDLE); // Not success yet, just ready for OTP
-            setTransferDetailsForExecution(detailsToSend); // Store details needed for execute step
-            setStep('otp'); // Move to OTP step
+            // Show OTP flash screen
+            setFlashedOtp(response.otp);
+            setShowOtpFlash(true);
+            
+            // Hide OTP after 5 seconds
+            if (otpFlashTimeoutRef.current) {
+                clearTimeout(otpFlashTimeoutRef.current);
+            }
+            otpFlashTimeoutRef.current = setTimeout(() => {
+                setShowOtpFlash(false);
+                setFlashedOtp('');
+            }, 5000);
+
+            setFeedbackMessage(response.message || 'OTP initiated. Please check your device (or console).');
+            setFormStatus(STATUS_IDLE);
+            setTransferDetailsForExecution(detailsToSend);
+            setStep('otp');
 
         } catch (error) {
-            console.error(">>> handleInitiateTransfer: API Error:", error); // DEBUG
+            console.error(">>> handleInitiateTransfer: API Error:", error);
             setFeedbackMessage(error.message || 'Failed to initiate transfer.');
             setFormStatus(STATUS_ERROR);
-            setTransferDetailsForExecution(null); // Clear details on error
+            setTransferDetailsForExecution(null);
         }
     };
 
@@ -254,6 +277,19 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
         <Card>
             <CardHeader><CardTitle>Make a Transfer</CardTitle></CardHeader>
             <CardContent>
+                {/* OTP Flash Screen */}
+                {showOtpFlash && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+                            <h3 className="text-xl font-bold mb-4">Your OTP</h3>
+                            <div className="text-4xl font-mono font-bold tracking-wider mb-4">
+                                {flashedOtp}
+                            </div>
+                            <p className="text-sm text-gray-600">This OTP will disappear in 5 seconds</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* --- Feedback Area --- */}
                  {feedbackMessage && (formStatus === STATUS_PROCESSING || formStatus === STATUS_ERROR || formStatus === STATUS_SUCCESS) && (
                      <Alert
