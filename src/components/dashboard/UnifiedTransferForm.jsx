@@ -283,7 +283,7 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess, onOptimisticBal
 
             // Call the success callback passed from DashboardPage to trigger refresh
             if (onTransferSuccess) {
-                onTransferSuccess('Transfer completed successfully!');
+                onTransferSuccess('Transfer completed successfully!', false); // Don't refetch, just show message
             }
 
             // Reset form fields after a short delay (managed by useEffect on formStatus)

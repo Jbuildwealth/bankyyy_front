@@ -54,12 +54,12 @@ const DashboardPage = ({ onNavigateToProfile }) => {
     // --- Handlers ---
 
     // Generic handler for actions causing data refresh
-     const handleActionSuccess = useCallback((message = 'Action successful!') => {
-        // console.log("Action successful, refreshing accounts/transactions...");
+     const handleActionSuccess = useCallback((message = 'Action successful!', shouldRefetch = true) => {
         setGlobalMessage({ type: 'success', text: message });
-        fetchAccounts();
-        fetchTransactions();
-        // Clear message after a delay
+        if (shouldRefetch) {
+            fetchAccounts();
+            fetchTransactions();
+        }
         setTimeout(() => setGlobalMessage({ type: '', text: '' }), 4000);
      }, [fetchAccounts, fetchTransactions]); // Dependencies
 
