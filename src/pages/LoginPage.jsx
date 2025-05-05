@@ -124,33 +124,28 @@ const LoginPage = () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         clearAuthError(); setFeedbackMessage(''); setProcessStatus(STATUS_AUTHENTICATING);
         setFeedbackMessage('Authenticating...'); 
-        console.log("handleSubmit: Set status to AUTHENTICATING");
         
         const credentials = {
             email: email.trim(),
             password: password
         };
-        console.log("Submitting credentials:", credentials);
         
         const authResult = await login(credentials);
-        console.log("handleSubmit: login() call returned:", authResult);
         if (authResult && authResult.token && authResult.user) {
-            console.log("handleSubmit: Login successful, starting simulation...");
             setProcessStatus(STATUS_VERIFYING); setFeedbackMessage('Verifying credentials...');
             timeoutRef.current = setTimeout(() => {
-                console.log(">>> Timeout 1 Fired - CHECKING"); setProcessStatus(STATUS_CHECKING); setFeedbackMessage('Checking account status...');
+                setProcessStatus(STATUS_CHECKING); setFeedbackMessage('Checking account status...');
                 timeoutRef.current = setTimeout(() => {
-                    console.log(">>> Timeout 2 Fired - FINALIZING"); setProcessStatus(STATUS_FINALIZING); setFeedbackMessage('Finalizing login...');
+                    setProcessStatus(STATUS_FINALIZING); setFeedbackMessage('Finalizing login...');
                     timeoutRef.current = setTimeout(() => {
-                        console.log(">>> Timeout 3 Fired - SUCCESS"); setProcessStatus(STATUS_SUCCESS); setFeedbackMessage('Login successful! Redirecting...');
+                        setProcessStatus(STATUS_SUCCESS); setFeedbackMessage('Login successful! Redirecting...');
                         timeoutRef.current = setTimeout(() => {
-                             console.log(">>> Timeout 4 Fired - setAuthState");
                              setAuthState(authResult.token, authResult.user);
                         }, 500);
                     }, 1500);
                 }, 2000);
             }, 1800);
-        } else { console.log("handleSubmit: Login API failed"); setProcessStatus(STATUS_ERROR); setFeedbackMessage(''); setPassword(''); }
+        } else { setProcessStatus(STATUS_ERROR); setFeedbackMessage(''); setPassword(''); }
     };
 
     const isLoading = isAuthLoading || (processStatus !== STATUS_IDLE && processStatus !== STATUS_SUCCESS && processStatus !== STATUS_ERROR);

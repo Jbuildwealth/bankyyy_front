@@ -31,7 +31,7 @@ const TransactionHistory = ({ transactions, isLoading, error, accounts, filterAc
     // Calculate filtered transactions using useMemo (Hook 4)
     const filteredTransactions = useMemo(() => {
         const safeTransactions = Array.isArray(transactions) ? transactions : [];
-        console.log("[TransactionHistory] Raw transactions received in prop:", safeTransactions); // Log raw props
+        // console.log("[TransactionHistory] Raw transactions received in prop:", safeTransactions); // Log raw props
 
         if (!filterAccountId) {
             return safeTransactions;
@@ -126,12 +126,6 @@ const TransactionHistory = ({ transactions, isLoading, error, accounts, filterAc
                         <tbody className="bg-white divide-y divide-gray-200">{
                             transactionsToDisplay.map((txn) => {
                                 if (!txn) return null; // Skip if txn is null/undefined
-
-                                // DEBUG: Log the transaction object being rendered
-                                console.log('[TransactionHistory] Rendering txn:', txn);
-                                // DEBUG: Log the specific fields before formatting
-                                console.log(`[TransactionHistory] Before format - Amount: ${txn.amount} (Type: ${typeof txn.amount}), BalanceAfter: ${txn.balanceAfter} (Type: ${typeof txn.balanceAfter})`);
-
 
                                 // --- FIX: Prioritize transactionDate (custom), fallback to createdAt (automatic) ---
                                 const displayDate = formatDate(txn.transactionDate || txn.createdAt);

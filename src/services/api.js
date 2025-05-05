@@ -13,9 +13,9 @@ const api = {
         const url = `${API_BASE_URL}${endpoint}`;
         const token = localStorage.getItem('authToken');
 
-        console.log(`>>> API Request: ${options.method || 'GET'} ${url}`); // Keep basic log
+        // console.log(`>>> API Request: ${options.method || 'GET'} ${url}`); // Keep basic log
         if (options.body) {
-            console.log('>>> Request Body:', options.body);
+            // console.log('>>> Request Body:', options.body);
         }
 
         const headers = {
@@ -26,7 +26,7 @@ const api = {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
-        console.log('>>> Request Headers:', headers);
+        // console.log('>>> Request Headers:', headers);
 
         try {
             const response = await fetch(url, { 
@@ -36,11 +36,11 @@ const api = {
                 mode: 'cors'
             });
 
-            console.log('>>> Response Status:', response.status);
-            console.log('>>> Response Headers:', Object.fromEntries(response.headers.entries()));
+            // console.log('>>> Response Status:', response.status);
+            // console.log('>>> Response Headers:', Object.fromEntries(response.headers.entries()));
 
             if (response.status === 204) {
-                console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: 204 No Content)`);
+                // console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: 204 No Content)`);
                 return null;
             }
 
@@ -49,16 +49,16 @@ const api = {
             if (contentType && contentType.indexOf("application/json") !== -1) {
                  try {
                     data = await response.json();
-                    console.log('<<< Response Data:', data);
+                    // console.log('<<< Response Data:', data);
                  } catch (jsonError) {
-                    console.error('API JSON Parse Error:', jsonError, 'Status:', response.status, 'URL:', url);
+                    // console.error('API JSON Parse Error:', jsonError, 'Status:', response.status, 'URL:', url);
                     const parseError = new Error('Failed to parse server JSON response.');
                     parseError.status = response.status;
                     throw parseError;
                  }
             } else {
                 const responseText = await response.text();
-                console.log('<<< Response Text:', responseText);
+                // console.log('<<< Response Text:', responseText);
                 if(response.ok) {
                     data = { message: responseText || `Received status ${response.status} with non-JSON body.` };
                 } else {
@@ -70,23 +70,23 @@ const api = {
                 const errorMessage = data?.message 
                     || data?._rawText 
                     || `HTTP error! status: ${response.status}`;
-                console.error('<<< Error Response:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: Object.fromEntries(response.headers.entries()),
-                    data: data
-                });
+                // console.error('<<< Error Response:', {
+                //     status: response.status,
+                //     statusText: response.statusText,
+                //     headers: Object.fromEntries(response.headers.entries()),
+                //     data: data
+                // });
                 const error = new Error(errorMessage);
                 error.status = response.status;
                 error.data = data;
                 throw error;
             }
-            console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: ${response.status})`);
+            // console.log(`<<< API Request Success: ${options.method || 'GET'} ${url} (Status: ${response.status})`);
             return data;
 
         } catch (error) {
             if (!error.status) {
-                 console.error(`<<< API Request Network/Processing FAIL: ${options.method || 'GET'} ${url}. Error:`, error);
+                 // console.error(`<<< API Request Network/Processing FAIL: ${options.method || 'GET'} ${url}. Error:`, error);
             }
             if (error.status) { throw error; }
             if (error instanceof TypeError) {
@@ -106,14 +106,14 @@ const api = {
             email: credentials.email.trim().toLowerCase(),
             password: credentials.password
         };
-        console.log('Login credentials:', formattedCredentials);
+        // console.log('Login credentials:', formattedCredentials);
         
         // First, test the API connection
         try {
-            console.log('Testing API connection...');
+            // console.log('Testing API connection...');
             await this.testConnection();
         } catch (error) {
-            console.error('API connection test failed:', error);
+            // console.error('API connection test failed:', error);
         }
 
         return this.request('/auth/login', { 

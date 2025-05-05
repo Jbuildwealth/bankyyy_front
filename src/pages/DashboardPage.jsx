@@ -45,7 +45,7 @@ const DashboardPage = ({ onNavigateToProfile }) => {
 
     // --- Effects ---
     useEffect(() => {
-        console.log("DashboardPage initial useEffect running...");
+        // console.log("DashboardPage initial useEffect running...");
         fetchAccounts();
         fetchTransactions();
     }, [fetchAccounts, fetchTransactions]); // Dependencies
@@ -55,7 +55,7 @@ const DashboardPage = ({ onNavigateToProfile }) => {
 
     // Generic handler for actions causing data refresh
      const handleActionSuccess = useCallback((message = 'Action successful!') => {
-        console.log("Action successful, refreshing accounts/transactions...");
+        // console.log("Action successful, refreshing accounts/transactions...");
         setGlobalMessage({ type: 'success', text: message });
         fetchAccounts();
         fetchTransactions();
@@ -65,13 +65,13 @@ const DashboardPage = ({ onNavigateToProfile }) => {
 
      // Specific handler for account rename success
      const handleAccountRenamed = useCallback(() => {
-         console.log("Account rename successful, calling refresh...");
+         // console.log("Account rename successful, calling refresh...");
          handleActionSuccess('Account renamed successfully!'); // Use generic handler with specific message
      }, [handleActionSuccess]); // Dependency
 
      // Handler for account deletion success
       const handleAccountDeleted = useCallback(() => {
-         console.log("Account delete successful, calling refresh...");
+         // console.log("Account delete successful, calling refresh...");
          handleActionSuccess('Account deleted successfully!'); // Use generic handler
          setHistoryFilterAccountId(null); // Clear filter if the filtered account was deleted
      }, [handleActionSuccess]);
@@ -95,7 +95,7 @@ const DashboardPage = ({ onNavigateToProfile }) => {
 
 
     // --- Render Logic ---
-    console.log('Rendering DashboardPage with State:', { isLoadingAccounts, isLoadingTransactions, accountError, transactionError, accountsCount: accounts.length, transactionsCount: transactions.length, showDepositWithdrawalForms, historyFilterAccountId });
+    // console.log('Rendering DashboardPage with State:', { isLoadingAccounts, isLoadingTransactions, accountError, transactionError, accountsCount: accounts.length, transactionsCount: transactions.length, showDepositWithdrawalForms, historyFilterAccountId });
 
     return (
         <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">

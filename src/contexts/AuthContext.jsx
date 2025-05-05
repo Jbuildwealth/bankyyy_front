@@ -22,13 +22,13 @@ export const AuthProvider = ({ children }) => {
             try {
                 setToken(storedToken);
                 setUser(JSON.parse(storedUser));
-                console.log("AuthContext: Initial state loaded from localStorage.");
+                // console.log("AuthContext: Initial state loaded from localStorage.");
             } catch (e) {
-                console.error("AuthContext: Failed to parse stored user", e);
+                // console.error("AuthContext: Failed to parse stored user", e);
                 localStorage.removeItem('authUser'); localStorage.removeItem('authToken');
             }
         } else {
-            console.log("AuthContext: No initial state found in localStorage.");
+            // console.log("AuthContext: No initial state found in localStorage.");
         }
     }, []); // Run only once
 
@@ -37,19 +37,19 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(true); setAuthError(null);
         let data;
         try {
-            console.log("AuthContext: Calling api.login...");
+            // console.log("AuthContext: Calling api.login...");
             data = await api.login(credentials);
-            console.log("AuthContext: api.login call completed. Received data:", data);
+            // console.log("AuthContext: api.login call completed. Received data:", data);
 
             if (data && data.token && data.user) {
-                console.log("AuthContext: Login successful, returning token and user.");
+                // console.log("AuthContext: Login successful, returning token and user.");
                 return { token: data.token, user: data.user }; // Return data for LoginPage to handle
             } else {
-                 console.warn("AuthContext: Login API response missing token or user.", data);
+                 // console.warn("AuthContext: Login API response missing token or user.", data);
                  throw new Error(data?.message || 'Login failed: Invalid response structure from server.');
             }
         } catch (error) {
-            console.error("AuthContext: Login API call failed:", error);
+            // console.error("AuthContext: Login API call failed:", error);
             let specificError = error.message || 'Login failed.';
             if (error.status === 401) { specificError = 'Invalid email or password.'; }
             else if (error.isNetworkError) { specificError = 'Network error. Unable to reach server.'; }
@@ -73,11 +73,11 @@ export const AuthProvider = ({ children }) => {
                 setUser(data.user);
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('authUser', JSON.stringify(data.user));
-                console.log("AuthContext: Registration successful.");
+                // console.log("AuthContext: Registration successful.");
                 return true;
             } else { throw new Error(data.message || 'Registration failed: Invalid response.'); }
         } catch (error) {
-            console.error("Registration failed:", error);
+            // console.error("Registration failed:", error);
             if (error.status === 409 || error.message?.includes('Duplicate') || error.message?.includes('already exists')) {
                  setAuthError('Registration failed: Email already exists.');
             } else {
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
 
     // Function called by LoginPage to set state after successful login API call
     const setAuthState = useCallback((newToken, newUser) => {
-         console.log("AuthContext: setAuthState called.");
+         // console.log("AuthContext: setAuthState called.");
          setToken(newToken);
          setUser(newUser);
          localStorage.setItem('authToken', newToken);
@@ -105,11 +105,11 @@ export const AuthProvider = ({ children }) => {
             // Merge the updated data with the existing user state
             // Ensures fields not returned by the update API (like maybe roles or other flags) are kept
             const mergedUser = { ...user, ...updatedUserData };
-             console.log("AuthContext: Updating user state with:", mergedUser);
+             // console.log("AuthContext: Updating user state with:", mergedUser);
             setUser(mergedUser); // Update state
             localStorage.setItem('authUser', JSON.stringify(mergedUser)); // Update localStorage
         } else {
-             console.warn("AuthContext: updateUserContext called with invalid data", updatedUserData);
+             // console.warn("AuthContext: updateUserContext called with invalid data", updatedUserData);
         }
     }, [user]); // Depends on 'user' state so the merge uses the latest data
     // --- END NEW FUNCTION ---
@@ -117,16 +117,15 @@ export const AuthProvider = ({ children }) => {
     // Logout function
     const logout = useCallback(() => {
         setLogoutStatus('processing'); setLogoutMessage('Logging out...');
-        console.log("AuthContext: Logout initiated.");
-        setTimeout(async () => {
-            try { console.log("AuthContext: Server logout call simulation complete."); }
-            catch (e) { console.error("Backend logout call failed (optional):", e); }
-            setLogoutMessage('Clearing session...'); console.log("AuthContext: Clearing local session state...");
+        // console.log("AuthContext: Logout initiated.");
+        setTimeout(() => {
+            // Logging simulation removed for clean code
+            setLogoutMessage('Clearing session...'); // console.log("AuthContext: Clearing local session state...");
             setTimeout(() => {
                 setUser(null); setToken(null);
                 localStorage.removeItem('authToken'); localStorage.removeItem('authUser');
                 setLogoutStatus('success'); setLogoutMessage('Logged out successfully.');
-                console.log("AuthContext: Local session cleared. Logout complete.");
+                // console.log("AuthContext: Local session cleared. Logout complete.");
                 setTimeout(() => { setLogoutStatus('idle'); setLogoutMessage(''); }, 1500);
             }, 700);
         }, 800);
