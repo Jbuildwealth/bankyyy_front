@@ -32,6 +32,8 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
     const [showOtpFlash, setShowOtpFlash] = useState(false);
     const [flashedOtp, setFlashedOtp] = useState('');
     const otpFlashTimeoutRef = useRef(null);
+    const [otpProgress, setOtpProgress] = useState(100);
+    const progressIntervalRef = useRef(null);
     // --- End State ---
 
     // --- Memoized Values ---
@@ -134,6 +136,18 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
         };
     }, []);
 
+    // Cleanup intervals and timeouts
+    useEffect(() => {
+        return () => {
+            if (otpFlashTimeoutRef.current) {
+                clearTimeout(otpFlashTimeoutRef.current);
+            }
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+            }
+        };
+    }, []);
+
     // --- Event Handlers ---
     const resetFormFields = useCallback(() => {
         setStep('details');
@@ -180,9 +194,24 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
             const response = await api.initiateTransfer(detailsToSend);
             console.log(">>> handleInitiateTransfer: API Response:", response);
 
-            // Show OTP flash screen
+            // Show OTP flash screen with progress
             setFlashedOtp(response.otp);
             setShowOtpFlash(true);
+            setOtpProgress(100);
+            
+            // Start progress bar animation
+            if (progressIntervalRef.current) {
+                clearInterval(progressIntervalRef.current);
+            }
+            progressIntervalRef.current = setInterval(() => {
+                setOtpProgress(prev => {
+                    if (prev <= 0) {
+                        clearInterval(progressIntervalRef.current);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 50); // Update every 50ms for smooth animation
             
             // Hide OTP after 5 seconds
             if (otpFlashTimeoutRef.current) {
@@ -191,6 +220,10 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
             otpFlashTimeoutRef.current = setTimeout(() => {
                 setShowOtpFlash(false);
                 setFlashedOtp('');
+                setOtpProgress(100);
+                if (progressIntervalRef.current) {
+                    clearInterval(progressIntervalRef.current);
+                }
             }, 5000);
 
             setFeedbackMessage(response.message || 'OTP initiated. Please check your device (or console).');
@@ -280,12 +313,21 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
                 {/* OTP Flash Screen */}
                 {showOtpFlash && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+                        <div className="bg-white p-8 rounded-lg shadow-xl text-center relative overflow-hidden">
                             <h3 className="text-xl font-bold mb-4">Your OTP</h3>
-                            <div className="text-4xl font-mono font-bold tracking-wider mb-4">
+                            <div className="text-4xl font-mono font-bold tracking-wider mb-4 animate-pulse">
                                 {flashedOtp}
                             </div>
-                            <p className="text-sm text-gray-600">This OTP will disappear in 5 seconds</p>
+                            {/* Progress Bar */}
+                            <div className="h-1 bg-gray-200 rounded-full overflow-hidden mb-4">
+                                <div 
+                                    className="h-full bg-blue-600 transition-all duration-50 ease-linear"
+                                    style={{ width: `${otpProgress}%` }}
+                                />
+                            </div>
+                            <p className="text-sm text-gray-600">
+                                {otpProgress > 0 ? `Disappearing in ${Math.ceil(otpProgress / 20)}s` : 'Disappearing...'}
+                            </p>
                         </div>
                     </div>
                 )}
