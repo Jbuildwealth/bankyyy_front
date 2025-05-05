@@ -108,6 +108,11 @@ const DashboardPage = ({ onNavigateToProfile }) => {
         }));
     };
 
+    // Optimistic transaction add for transfers
+    const handleOptimisticTransactionAdd = (newTransaction) => {
+        setTransactions(prev => [newTransaction, ...prev]);
+    };
+
     // --- Render Logic ---
     // console.log('Rendering DashboardPage with State:', { isLoadingAccounts, isLoadingTransactions, accountError, transactionError, accountsCount: accounts.length, transactionsCount: transactions.length, showDepositWithdrawalForms, historyFilterAccountId });
 
@@ -189,6 +194,7 @@ const DashboardPage = ({ onNavigateToProfile }) => {
                                             accounts={accounts}
                                             onTransferSuccess={handleActionSuccess}
                                             onOptimisticBalanceUpdate={handleOptimisticBalanceUpdate}
+                                            onOptimisticTransactionAdd={handleOptimisticTransactionAdd}
                                         />
                                     </div>
                                 )}

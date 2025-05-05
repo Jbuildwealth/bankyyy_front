@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '../Alert.jsx';
 import Spinner from '../Spinner.jsx';
 import { formatCurrency } from '../../utils/formatters.js';
 
-const UnifiedTransferForm = ({ accounts = [], onTransferSuccess, onOptimisticBalanceUpdate }) => { // Default accounts to []
+const UnifiedTransferForm = ({ accounts = [], onTransferSuccess, onOptimisticBalanceUpdate, onOptimisticTransactionAdd }) => { // Default accounts to []
     // --- State ---
     const [step, setStep] = useState('details'); // 'details' or 'otp'
     const [transferType, setTransferType] = useState('internal');
@@ -279,6 +279,21 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess, onOptimisticBal
                     transferDetailsForExecution.amount,
                     transferDetailsForExecution.transferType
                 );
+            }
+
+            // Optimistically add transaction to history
+            if (typeof onOptimisticTransactionAdd === 'function') {
+                const now = new Date();
+                const newTxn = {
+                    _id: `optimistic-${now.getTime()}`,
+                    accountId: transferDetailsForExecution.fromAccountId,
+                    type: transferDetailsForExecution.transferType === 'internal' ? 'transfer-out' : 'transfer-out',
+                    amount: transferDetailsForExecution.amount,
+                    balanceAfter: null, // Optionally calculate
+                    description: transferDetailsForExecution.description,
+                    createdAt: now.toISOString(),
+                };
+                onOptimisticTransactionAdd(newTxn);
             }
 
             // Call the success callback passed from DashboardPage to trigger refresh
