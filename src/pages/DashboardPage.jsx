@@ -93,6 +93,20 @@ const DashboardPage = ({ onNavigateToProfile }) => {
         setHistoryFilterAccountId(null);
     }, []);
 
+    // Optimistic balance update for transfers
+    const handleOptimisticBalanceUpdate = (fromAccountId, toAccountId, amount, transferType) => {
+        setAccounts(prevAccounts => prevAccounts.map(acc => {
+            if (acc._id === fromAccountId) {
+                // Subtract from sender
+                return { ...acc, balance: parseFloat(acc.balance) - parseFloat(amount) };
+            }
+            if (transferType === 'internal' && acc._id === toAccountId) {
+                // Add to receiver (for internal transfers)
+                return { ...acc, balance: parseFloat(acc.balance) + parseFloat(amount) };
+            }
+            return acc;
+        }));
+    };
 
     // --- Render Logic ---
     // console.log('Rendering DashboardPage with State:', { isLoadingAccounts, isLoadingTransactions, accountError, transactionError, accountsCount: accounts.length, transactionsCount: transactions.length, showDepositWithdrawalForms, historyFilterAccountId });
@@ -171,7 +185,11 @@ const DashboardPage = ({ onNavigateToProfile }) => {
                                                 <TransactionForm title="Withdrawal" accounts={accounts} transactionType="withdrawal" onTransactionSuccess={() => handleActionSuccess('Withdrawal successful!')} />
                                             </>
                                         )}
-                                        <UnifiedTransferForm accounts={accounts} onTransferSuccess={() => handleActionSuccess('Transfer successful!')} />
+                                        <UnifiedTransferForm
+                                            accounts={accounts}
+                                            onTransferSuccess={handleActionSuccess}
+                                            onOptimisticBalanceUpdate={handleOptimisticBalanceUpdate}
+                                        />
                                     </div>
                                 )}
                     <CreateAccountForm onAccountCreated={() => handleActionSuccess('Account created successfully!')} />

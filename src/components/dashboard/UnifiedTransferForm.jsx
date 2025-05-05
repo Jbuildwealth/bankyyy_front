@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '../Alert.jsx';
 import Spinner from '../Spinner.jsx';
 import { formatCurrency } from '../../utils/formatters.js';
 
-const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Default accounts to []
+const UnifiedTransferForm = ({ accounts = [], onTransferSuccess, onOptimisticBalanceUpdate }) => { // Default accounts to []
     // --- State ---
     const [step, setStep] = useState('details'); // 'details' or 'otp'
     const [transferType, setTransferType] = useState('internal');
@@ -271,10 +271,19 @@ const UnifiedTransferForm = ({ accounts = [], onTransferSuccess }) => { // Defau
             setOtp(''); // Clear OTP field
             setTransferDetailsForExecution(null); // Clear stored details
 
+            // Optimistically update balances
+            if (typeof onOptimisticBalanceUpdate === 'function') {
+                onOptimisticBalanceUpdate(
+                    transferDetailsForExecution.fromAccountId,
+                    transferDetailsForExecution.toAccountId,
+                    transferDetailsForExecution.amount,
+                    transferDetailsForExecution.transferType
+                );
+            }
+
             // Call the success callback passed from DashboardPage to trigger refresh
             if (onTransferSuccess) {
-                 console.log(">>> handleExecuteTransfer: Calling onTransferSuccess callback."); // DEBUG
-                onTransferSuccess('Transfer completed successfully!'); // Pass success message up
+                onTransferSuccess('Transfer completed successfully!');
             }
 
             // Reset form fields after a short delay (managed by useEffect on formStatus)
