@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+ 
+=======
 // src/services/api.js
 
 // Configuration
@@ -190,3 +193,4 @@ const api = {
 };
 
 export default api;
+>>>>>>> 86c7069e506891d9f82f3d0ed35e3d5ff72e17dd
